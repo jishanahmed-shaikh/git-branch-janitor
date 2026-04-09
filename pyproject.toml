@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "git-branch-janitor"
+version = "1.0.0"
+description = "Delete local git branches that have already been merged into main"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Jishanahmed AR Shaikh", email = "jishanahmedshaikh@gmail.com" }]
+keywords = ["git", "cli", "devtools", "branches", "cleanup"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.scripts]
+git-janitor = "janitor.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/jishanahmed-shaikh/git-branch-janitor"
+Issues = "https://github.com/jishanahmed-shaikh/git-branch-janitor/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
