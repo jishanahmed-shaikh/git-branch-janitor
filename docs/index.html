@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>git-branch-janitor</title>
+  <meta name="description" content="Delete local git branches already merged into main. Keep your dev environment clean." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f9fafb;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #f97316;
+      --accent-light: #fff7ed;
+      --code-bg: #f3f4f6;
+      --radius: 10px;
+    }
+
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav-brand { font-weight: 700; font-size: 1rem; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+    .nav-links { display: flex; gap: 1.5rem; font-size: 0.875rem; }
+    .nav-links a { color: var(--muted); }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    .hero {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3rem;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hero p { font-size: 1.125rem; color: var(--muted); max-width: 560px; margin: 0 auto 2rem; }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; text-decoration: none; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-outline { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+    .install-block {
+      max-width: 560px;
+      margin: 0 auto 4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .install-header {
+      padding: 0.5rem 1rem;
+      background: var(--code-bg);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .copy-btn {
+      background: none; border: none; cursor: pointer; color: var(--muted);
+      font-size: 0.75rem; font-family: 'Inter', sans-serif;
+      padding: 0.2rem 0.5rem; border-radius: 4px; transition: background 0.15s;
+    }
+    .copy-btn:hover { background: var(--border); color: var(--text); }
+    .install-cmd { padding: 1rem 1.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; }
+    .install-cmd span { color: var(--accent); }
+
+    .section { max-width: 900px; margin: 0 auto; padding: 0 2rem 5rem; }
+    .section-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.75rem; }
+    .section h2 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 2.5rem; }
+
+    .steps { display: flex; flex-direction: column; gap: 1rem; }
+    .step {
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+    }
+    .step-num {
+      min-width: 32px;
+      height: 32px;
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+    }
+    .step-body h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .step-body p { font-size: 0.875rem; color: var(--muted); }
+    .step-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; background: var(--code-bg); padding: 0.1rem 0.35rem; border-radius: 4px; }
+
+    .protected-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      color: var(--text);
+    }
+
+    .usage-block { background: #1e1e2e; border-radius: var(--radius); overflow: hidden; margin-top: 1rem; }
+    .usage-bar { background: #2a2a3e; padding: 0.5rem 1rem; display: flex; gap: 0.4rem; align-items: center; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+    .usage-code {
+      padding: 1.25rem 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #cdd6f4;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .c-green { color: #a6e3a1; }
+    .c-orange { color: #fab387; }
+    .c-muted { color: #6c7086; }
+
+    footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; font-size: 0.8rem; color: var(--muted); }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <span class="nav-brand">git-branch-janitor</span>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#usage">Usage</a>
+      <a href="https://github.com/jishanahmed-shaikh/git-branch-janitor" target="_blank">GitHub</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="badge">Git Productivity</div>
+    <h1>git-branch-janitor</h1>
+    <p>Local branches pile up fast. This tool finds every branch already merged into main and cleans them up in one command.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://github.com/jishanahmed-shaikh/git-branch-janitor" target="_blank">View on GitHub</a>
+      <a class="btn btn-outline" href="#usage">See Usage</a>
+    </div>
+  </section>
+
+  <div class="install-block">
+    <div class="install-header">
+      <span>terminal</span>
+      <button class="copy-btn" onclick="copyInstall()">copy</button>
+    </div>
+    <div class="install-cmd">
+      <span>$</span> pip install git-branch-janitor
+    </div>
+  </div>
+
+  <section class="section" id="how">
+    <div class="section-label">How it works</div>
+    <h2>Three steps, zero mess</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Detect merged branches</h3>
+          <p>Runs <code>git branch --merged &lt;base&gt;</code> to get every branch fully merged into your base branch.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Filter protected branches</h3>
+          <p>Automatically skips <code>main</code>, <code>master</code>, <code>develop</code>, <code>staging</code>, <code>production</code>, and your currently active branch.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Delete safely</h3>
+          <p>Uses <code>git branch -d</code> (safe delete) so it will never remove a branch with unmerged work.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="usage">
+    <div class="section-label">Usage</div>
+    <h2>See it in action</h2>
+    <div class="usage-block">
+      <div class="usage-bar">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <div class="usage-code"><span class="c-muted">$ </span>git-janitor --dry-run
+
+<span class="c-orange">🌿 Merged branches (base: main):</span>
+
+   feature/login-page
+   fix/typo-in-readme
+   chore/update-deps
+
+<span class="c-muted">[dry-run] 3 branch(es) would be deleted. No changes made.</span>
+
+<span class="c-muted">$ </span>git-janitor --yes
+
+<span class="c-green">  🗑️  Deleted branch 'feature/login-page'</span>
+<span class="c-green">  🗑️  Deleted branch 'fix/typo-in-readme'</span>
+<span class="c-green">  🗑️  Deleted branch 'chore/update-deps'</span>
+
+  Done. 3 deleted, 0 failed.</div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Built by <a href="https://github.com/jishanahmed-shaikh" target="_blank">Jishanahmed AR Shaikh</a> &nbsp;·&nbsp; <a href="https://github.com/jishanahmed-shaikh/git-branch-janitor" target="_blank">Source on GitHub</a> &nbsp;·&nbsp; MIT License</p>
+  </footer>
+
+  <script>
+    function copyInstall() {
+      navigator.clipboard.writeText('pip install git-branch-janitor');
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = 'copy', 2000);
+    }
+  </script>
+
+</body>
+</html>
