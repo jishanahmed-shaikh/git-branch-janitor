@@ -1,52 +1,46 @@
 # git-branch-janitor
 
-![Python](https://img.shields.io/badge/python-3.8%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Tests](https://github.com/jishanahmed-shaikh/git-branch-janitor/actions/workflows/ci.yml/badge.svg)
-![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
+![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=flat&logo=python&logoColor=white)
+![Git](https://img.shields.io/badge/Git-Integration-F05032?style=flat&logo=git&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat)
+![CLI](https://img.shields.io/badge/Tool-CLI-orange?style=flat)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat)
 
-**Keep your local git environment clean by deleting branches already merged into main.**
-
-Over time, local branches pile up — feature branches, hotfixes, experiments. `git-branch-janitor` finds every branch that's been merged and wipes them out in one shot, with a dry-run mode so you always know what's going to happen before it does.
+Local branches pile up fast. `git-branch-janitor` finds every branch already merged into main and cleans them up in one command. Dry-run first, delete when ready.
 
 ---
 
-## Install
+## Quick Start
 
 ```bash
 pip install git-branch-janitor
 ```
 
-From source:
-
 ```bash
-git clone https://github.com/jishanahmed-shaikh/git-branch-janitor.git
-cd git-branch-janitor
-pip install -e .
+# See what would be deleted before touching anything
+git-janitor --dry-run
+
+# Clean up with a confirmation prompt
+git-janitor
+
+# Skip the prompt and just do it
+git-janitor --yes
 ```
 
 ---
 
-## Usage
+## All Flags
 
-```bash
-# Preview what would be deleted (safe, no changes)
-git-janitor --dry-run
+| Flag | What it does |
+|------|--------------|
+| `--base <branch>` | Branch to check merges against (default: `main`) |
+| `--dry-run` | Preview deletions without making any changes |
+| `--yes` | Skip the confirmation prompt |
+| `--version` | Print version and exit |
 
-# Delete merged branches interactively
-git-janitor
+---
 
-# Delete without confirmation prompt
-git-janitor --yes
-
-# Check against a different base branch
-git-janitor --base develop
-
-# Show version
-git-janitor --version
-```
-
-### Example Output
+## Example Run
 
 ```
 🌿 Merged branches (base: main):
@@ -68,31 +62,29 @@ Delete 3 branch(es)? [y/N] y
 
 ## Protected Branches
 
-The following branches are **never** deleted, regardless of merge status:
+These are never touched, no matter what:
 
-`main` · `master` · `develop` · `dev` · `staging` · `production`
+`main` `master` `develop` `dev` `staging` `production`
 
-The currently active branch is also always skipped.
-
----
-
-## Flags
-
-| Flag | Description |
-|------|-------------|
-| `--base <branch>` | Base branch to check merges against (default: `main`) |
-| `--dry-run` | Show what would be deleted without making changes |
-| `--yes` | Skip confirmation prompt |
-| `--version` | Show version and exit |
+Your currently active branch is also always skipped.
 
 ---
 
-## How It Works
+## Under the Hood
 
-1. Runs `git branch --merged <base>` to find all merged local branches
-2. Filters out protected branch names and the current active branch
-3. Shows the list and asks for confirmation (unless `--yes`)
-4. Deletes each branch using `git branch -d` (safe delete — won't remove unmerged work)
+Runs `git branch --merged <base>` to get the list, filters out protected names and the active branch, then deletes each one using `git branch -d` (safe delete, will not remove unmerged work).
+
+No external dependencies. Pure Python + subprocess.
+
+---
+
+## Install from Source
+
+```bash
+git clone https://github.com/jishanahmed-shaikh/git-branch-janitor.git
+cd git-branch-janitor
+pip install -e .
+```
 
 ---
 
@@ -102,4 +94,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-[MIT](LICENSE) — © 2026 Jishanahmed AR Shaikh
+[MIT](LICENSE) © 2026 Jishanahmed AR Shaikh
